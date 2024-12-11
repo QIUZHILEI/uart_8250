@@ -1,0 +1,10 @@
+[package]
+name = "uart_8250"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitflags = { version = "2", default-features = false }
+lego_device = { git = "https://github.com/lego-os/lego_device.git", features = [
+    "char",
+], branch = "main" }
