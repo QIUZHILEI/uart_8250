@@ -69,6 +69,6 @@ impl UartConfig {
             | ((self.parity_bit as u8) << 3)
             | ((self.parity_select as u8) << 4)
             | ((self.brk as u8) << 6)
-            | dlab
+            | dlab << 7
     }
 }
