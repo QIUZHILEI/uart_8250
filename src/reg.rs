@@ -4,28 +4,18 @@ reg_map!(
     RBR 0,
     THR 0,
     DLL 0,
-    IER 1,
-    DLM 1,
-    IIR 2,
-    FCR 2,
-    LCR 3,
-    MCR 4,
-    LSR 5,
-    MSR 6,
-    SCR 7
+    DLH 0x4,
+    IER 0x4,
+    IIR 0x8,
+    FCR 0x8,
+    LCR 0xC,
+    MCR 0x10,
+    LSR 0x14,
+    MSR 0x18,
+    SCR 0x1C
 );
 
 bitflags! {
-    #[derive(Debug,Clone, Copy)]
-    pub struct Lcr:u8{
-        const word_len =0x11;
-        const stop_bits = 0x1 << 2;
-        const parity = 0x1 << 3;
-        const parity_select = 0x1 << 4;
-        const stick_parity = 0x1 << 5;
-        const brk = 0x1 << 6;
-        const div_latch = 0x1 << 7;
-    }
     #[derive(Debug,Clone, Copy)]
     pub struct Lsr:u8{
         const data_ready =0x1;

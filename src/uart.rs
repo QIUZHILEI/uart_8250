@@ -25,7 +25,7 @@ impl Device for Uart {
     fn init(&mut self) -> Result<(), DeviceError> {
         let config = self.config;
         write_reg::<u8>(self.base_address, LCR, config.to_u8(1));
-        write_reg::<u8>(self.base_address, FCR, 1);
+        write_reg::<u8>(self.base_address, FCR, Fcr::enable.bits());
         write_reg::<u16>(self.base_address, DLL, config.divisor as u16);
         write_reg::<u8>(self.base_address, LCR, config.to_u8(0));
         Ok(())
