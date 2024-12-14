@@ -1,5 +1,5 @@
+use crate::{reg::*, LcrConfig};
 use core::fmt::Write;
-use crate::{reg::*, UartConfig};
 
 use lego_device::{
     read_reg, write_reg, CharDevInfo, CharDevice, Device, DeviceError, DeviceStatus, DeviceType,
@@ -8,7 +8,7 @@ use lego_device::{
 pub struct Uart {
     base_address: usize,
     status: DeviceStatus,
-    config: UartConfig,
+    config: LcrConfig,
 }
 
 impl Uart {
@@ -16,7 +16,7 @@ impl Uart {
         Self {
             base_address,
             status: DeviceStatus::Uninitialized,
-            config: UartConfig::uart8250(div),
+            config: LcrConfig::default_config(div),
         }
     }
 }
@@ -25,7 +25,8 @@ impl Device for Uart {
     fn init(&mut self) -> Result<(), DeviceError> {
         let config = self.config;
         write_reg::<u8>(self.base_address, LCR, config.to_u8(1));
-        write_reg::<u8>(self.base_address, DLL, config.divisor);
+        write_reg::<u8>(self.base_address, FCR, 1);
+        write_reg::<u16>(self.base_address, DLL, config.divisor as u16);
         write_reg::<u8>(self.base_address, LCR, config.to_u8(0));
         Ok(())
     }
@@ -63,9 +64,13 @@ impl CharDevice for Uart {
     }
 
     fn put_char(&self, ch: u8) -> core::result::Result<(), DeviceError> {
-        while read_reg::<u8>(self.base_address, LSR) & 0x20 == 0 {}
-        write_reg::<u8>(self.base_address, THR, ch);
-        Ok(())
+        let lsr = Lsr::from_bits(read_reg::<u8>(self.base_address, LSR)).unwrap();
+        if lsr.contains(Lsr::thre) {
+            write_reg::<u8>(self.base_address, THR, ch);
+            Ok(())
+        } else {
+            Err(DeviceError::DeviceBusy)
+        }
     }
 
     fn information(&self) -> &dyn CharDevInfo {
