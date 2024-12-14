@@ -1,5 +1,4 @@
 use core::fmt::Write;
-
 use crate::{reg::*, UartConfig};
 
 use lego_device::{
@@ -24,32 +23,10 @@ impl Uart {
 
 impl Device for Uart {
     fn init(&mut self) -> Result<(), DeviceError> {
-        let lcr = (self.base_address + 3) as *mut u8;
         let config = self.config;
-        unsafe {
-            lcr.write_volatile(
-                config.word_len as u8
-                    | ((config.stop_bits as u8) << 2)
-                    | ((config.parity_bit as u8) << 3)
-                    | ((config.parity_select as u8) << 4)
-                    | ((config.brk as u8) << 6)
-                    | 1 << 7,
-            );
-        }
-
-        let dll = (self.base_address) as *mut u8;
-        unsafe {
-            dll.write_volatile(13);
-        }
-        unsafe {
-            lcr.write_volatile(
-                config.word_len as u8
-                    | ((config.stop_bits as u8) << 2)
-                    | ((config.parity_bit as u8) << 3)
-                    | ((config.parity_select as u8) << 4)
-                    | ((config.brk as u8) << 6),
-            );
-        }
+        write_reg::<u8>(self.base_address, LCR, config.to_u8(1));
+        write_reg::<u8>(self.base_address, DLL, config.divisor);
+        write_reg::<u8>(self.base_address, LCR, config.to_u8(0));
         Ok(())
     }
 
@@ -79,8 +56,7 @@ impl CharDevice for Uart {
     fn get_char(&self) -> core::result::Result<u8, DeviceError> {
         let lsr = Lsr::from_bits(read_reg::<u8>(self.base_address, LSR)).unwrap();
         if lsr.contains(Lsr::thre) {
-            let ch = read_reg::<u8>(self.base_address, RBR);
-            Ok(ch)
+            Ok(read_reg::<u8>(self.base_address, RBR))
         } else {
             Err(DeviceError::DeviceBusy)
         }

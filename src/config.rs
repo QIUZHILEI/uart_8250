@@ -44,12 +44,12 @@ pub enum Break {
 
 #[derive(Debug, Clone, Copy)]
 pub struct UartConfig {
-    pub word_len: WordLength,
-    pub stop_bits: StopBits,
-    pub parity_bit: Parity,
-    pub parity_select: ParitySelect,
-    pub brk: Break,
-    pub divisor: u8,
+    word_len: WordLength,
+    stop_bits: StopBits,
+    parity_bit: Parity,
+    parity_select: ParitySelect,
+    brk: Break,
+    pub(crate) divisor: u8,
 }
 
 impl UartConfig {
@@ -62,5 +62,13 @@ impl UartConfig {
             brk: Break::DISABLE,
             divisor: div,
         }
+    }
+    pub(crate) fn to_u8(&self,dlab:u8) -> u8 {
+        self.word_len as u8
+            | ((self.stop_bits as u8) << 2)
+            | ((self.parity_bit as u8) << 3)
+            | ((self.parity_select as u8) << 4)
+            | ((self.brk as u8) << 6)
+            | dlab
     }
 }

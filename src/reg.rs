@@ -2,17 +2,17 @@ use bitflags::bitflags;
 use lego_device::reg_map;
 reg_map!(
     RBR 0,
-    DLL 0,
     THR 0,
-    DLH 0x4,
-    IER 0x4,
-    FCR 0x8,
-    IIR 0x8,
-    LCR 0xC,
-    MCR 0x10,
-    LSR 0x14,
-    MSR 0x18,
-    SCR 0x1C
+    DLL 0,
+    IER 1,
+    DLM 1,
+    IIR 2,
+    FCR 2,
+    LCR 3,
+    MCR 4,
+    LSR 5,
+    MSR 6,
+    SCR 7
 );
 
 bitflags! {
