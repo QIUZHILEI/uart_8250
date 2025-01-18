@@ -28,6 +28,7 @@ impl Device for Uart {
         write_reg::<u8>(self.base_address, FCR, Fcr::enable.bits());
         write_reg::<u16>(self.base_address, DLL, config.divisor as u16);
         write_reg::<u8>(self.base_address, LCR, config.to_u8(0));
+        write_reg::<u8>(self.base_address, IER, 1);
         Ok(())
     }
 
