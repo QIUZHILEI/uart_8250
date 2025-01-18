@@ -57,7 +57,7 @@ impl Device for Uart {
 impl CharDevice for Uart {
     fn get_char(&self) -> core::result::Result<u8, DeviceError> {
         let lsr = Lsr::from_bits(read_reg::<u8>(self.base_address, LSR)).unwrap();
-        if lsr.contains(Lsr::thre) {
+        if lsr.contains(Lsr::data_ready) {
             Ok(read_reg::<u8>(self.base_address, RBR))
         } else {
             Err(DeviceError::DeviceBusy)
