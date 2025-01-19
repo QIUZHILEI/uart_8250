@@ -43,14 +43,9 @@ bitflags! {
         const id = 0xF;
         const fifo_enabled = 0b11 << 6;
     }
-
-    #[derive(Debug,Clone, Copy)]
-    pub struct Fcr:u8{
-        const enable =0x1;
-        const rc_reset = 0x1 << 1;
-        const ts_reset = 0x1 << 2;
-        const dma_mode = 0x1 << 3;
-        const ts_trigger = 0b11 << 4;
-        const rc_trigger = 0b11 << 6;
-    }
 }
+
+pub(crate) const FCR_FIFO: u8 = 0x01;
+pub(crate) const FCR_RCVRCLR: u8 = 0x02;
+pub(crate) const FCR_XMITCLR: u8 = 0x04;
+pub(crate) const FCR_FIFO_8: u8 = 0x80;

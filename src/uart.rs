@@ -1,5 +1,4 @@
-use crate::{reg::*, LcrConfig};
-use core::fmt::Write;
+use crate::{reg::*, LcrConfig, DLAB};
 
 use lego_device::{
     read_reg, write_reg, CharDevInfo, CharDevice, Device, DeviceError, DeviceStatus, DeviceType,
@@ -8,27 +7,38 @@ use lego_device::{
 pub struct Uart {
     base_address: usize,
     status: DeviceStatus,
-    config: LcrConfig,
+    baud_rate: u64,
+    clk_hz: u64,
 }
 
 impl Uart {
-    pub const fn new(base_address: usize, div: u8) -> Self {
+    pub const fn new(base_address: usize, clk_hz: u64, baud_rate: u64) -> Self {
         Self {
             base_address,
             status: DeviceStatus::Uninitialized,
-            config: LcrConfig::default_config(div),
+            baud_rate,
+            clk_hz,
         }
     }
 }
 
 impl Device for Uart {
     fn init(&mut self) -> Result<(), DeviceError> {
-        let config = self.config;
-        write_reg::<u8>(self.base_address, LCR, config.to_u8(1));
-        write_reg::<u8>(self.base_address, FCR, Fcr::enable.bits());
-        write_reg::<u16>(self.base_address, DLL, config.divisor as u16);
-        write_reg::<u8>(self.base_address, LCR, config.to_u8(0));
-        write_reg::<u8>(self.base_address, IER, 1);
+        write_reg::<u8>(self.base_address, IER, 0);
+        let config = LcrConfig::default_config();
+        write_reg::<u8>(self.base_address, LCR, config.get_value(DLAB::Enable));
+        let divisor = self.clk_hz / (self.baud_rate << 4);
+        write_reg::<u8>(self.base_address, DLL, (divisor & 0xff) as u8);
+        write_reg::<u8>(self.base_address, DLH, ((divisor >> 8) & 0xff) as u8);
+        write_reg::<u8>(self.base_address, LCR, config.get_value(DLAB::Disable));
+        write_reg::<u8>(
+            self.base_address,
+            FCR,
+            FCR_FIFO | FCR_FIFO_8 | FCR_RCVRCLR | FCR_XMITCLR,
+        );
+        let mcr = read_reg::<u8>(self.base_address, MCR) & !0x1F;
+        write_reg::<u8>(self.base_address, MCR, mcr | 0b11);
+        write_reg::<u8>(self.base_address, IER, 0x1);
         Ok(())
     }
 
@@ -76,15 +86,6 @@ impl CharDevice for Uart {
 
     fn information(&self) -> &dyn CharDevInfo {
         todo!()
-    }
-}
-
-impl Write for Uart {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        for ele in s.as_bytes() {
-            self.put_char(*ele).unwrap();
-        }
-        Ok(())
     }
 }
 

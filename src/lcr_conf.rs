@@ -42,6 +42,12 @@ pub enum Break {
     ENABLE = 1,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum DLAB {
+    Disable = 0,
+    Enable = 1,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct LcrConfig {
     word_len: WordLength,
@@ -50,11 +56,10 @@ pub struct LcrConfig {
     parity_select: ParitySelect,
     stick_parity: StickParity,
     brk: Break,
-    pub(crate) divisor: u8,
 }
 
 impl LcrConfig {
-    pub const fn default_config(div: u8) -> Self {
+    pub const fn default_config() -> Self {
         Self {
             word_len: WordLength::EIGHT,
             stop_bits: StopBits::ONE,
@@ -62,17 +67,16 @@ impl LcrConfig {
             parity_select: ParitySelect::EVEN,
             stick_parity: StickParity::DISABLE,
             brk: Break::DISABLE,
-            divisor: div,
         }
     }
 
-    pub(crate) fn to_u8(&self, dlab: u8) -> u8 {
+    pub(crate) fn get_value(&self, dlab: DLAB) -> u8 {
         self.word_len as u8
             | ((self.stop_bits as u8) << 2)
             | ((self.parity_bit as u8) << 3)
             | ((self.parity_select as u8) << 4)
             | ((self.stick_parity as u8) << 5)
             | ((self.brk as u8) << 6)
-            | dlab << 7
+            | ((dlab as u8) << 7)
     }
 }
